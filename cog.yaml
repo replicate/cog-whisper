@@ -1,0 +1,29 @@
+# Configuration for Cog ⚙️
+# Reference: https://github.com/replicate/cog/blob/main/docs/yaml.md
+
+build:
+  # set to true if your model requires a GPU
+  gpu: true
+
+  # a list of ubuntu apt packages to install
+  system_packages:
+    - "ffmpeg"
+
+  # python version in the form '3.8' or '3.8.12'
+  python_version: "3.9"
+
+  # a list of packages in the format <package-name>==<version>
+  python_packages:
+    - "numpy==1.24.1"
+    - "torch==1.13.0"
+    - "tqdm==4.64.1"
+    - "more-itertools==9.0.0"
+    - "transformers==4.25.1"
+    - "ffmpeg-python==0.2.0"
+
+  # commands run after the environment is setup
+  run:
+    - "pip install git+https://github.com/openai/whisper.git@f82bc59f5ea234d4b97fb2860842ed38519f7e65"
+
+# predict.py defines how predictions are run on your model
+predict: "predict.py:Predictor"
