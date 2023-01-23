@@ -4,6 +4,7 @@ from typing import Optional, Any
 import torch
 import numpy as np
 from cog import BasePredictor, Input, Path, BaseModel
+import time
 
 from whisper.tokenizer import LANGUAGES, TO_LANGUAGE_CODE
 from whisper.utils import format_timestamp
@@ -23,7 +24,8 @@ class Predictor(BasePredictor):
         """Loads whisper models into memory to make running multiple predictions efficient"""
 
         self.models = {}
-        for model in ["tiny", "base", "small", "medium", "large-v1"]:
+        start_time = time.time()
+        for model in ["tiny", "base", "small", "medium", "large-v1", "large-v2"]:
             with open(f"./weights/{model}.pt", "rb") as fp:
                 cur_model = torch.load(fp, map_location="cpu")
                 cur_model.eval()
@@ -31,6 +33,8 @@ class Predictor(BasePredictor):
         
         # preserving compatibility
         self.models["large"] = self.models["large-v1"]
+        total_time = time.time() - start_time
+        print(f"load time: {total_time}")
 
     def predict(
         self,
