@@ -11,9 +11,10 @@ RAW_WEIGHTS_DIR = "./raw_weights"
 
 def process_weights():
     files = os.listdir(RAW_WEIGHTS_DIR)
+    files = [val for val in files if '.pt' in val]
     logging.info(f"All weights to process: {files}")
 
-    for weights_file in os.listdir(RAW_WEIGHTS_DIR):
+    for weights_file in files:
 
         with open(os.path.join(RAW_WEIGHTS_DIR, weights_file), "rb") as fp:
             logging.info(f"Processing {weights_file}")
