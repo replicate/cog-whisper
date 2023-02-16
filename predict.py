@@ -24,23 +24,21 @@ class Predictor(BasePredictor):
     def setup(self):
         """Loads whisper models into memory to make running multiple predictions efficient"""
 
-        self.models = {}
-        for model in ["tiny", "base", "small", "medium", "large-v1"]:
+        for model in ["large-v2"]:
             with open(f"./weights/{model}.pt", "rb") as fp:
                 checkpoint = torch.load(fp, map_location="cpu")
                 dims = ModelDimensions(**checkpoint["dims"])
-                self.models[model] = Whisper(dims)
-                self.models[model].load_state_dict(checkpoint["model_state_dict"])
+                self.model = Whisper(dims)
+                self.model.load_state_dict(checkpoint["model_state_dict"])
         
-        # preserving compatibility
-        self.models["large"] = self.models["large-v1"]
+        self.model.to("cuda")
 
     def predict(
         self,
         audio: Path = Input(description="Audio file"),
         model: str = Input(
-            default="base",
-            choices=["tiny", "base", "small", "medium", "large-v1", "large"],
+            default="large-v2",
+            choices=["large", "large-v2"],
             description="Choose a Whisper model.",
         ),
         transcription: str = Input(
@@ -97,7 +95,7 @@ class Predictor(BasePredictor):
     ) -> ModelOutput:
         """Transcribes and optionally translates a single audio file"""
         print(f"Transcribe with {model} model")
-        model = self.models[model].to("cuda")
+        model = self.model
 
         if temperature_increment_on_fallback is not None:
             temperature = tuple(
