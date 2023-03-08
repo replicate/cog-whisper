@@ -23,7 +23,7 @@ build:
 
   # commands run after the environment is setup
   run:
-    - "pip install git+https://github.com/openai/whisper.git@f82bc59f5ea234d4b97fb2860842ed38519f7e65"
+    - "pip install openai-whisper"
 
 # predict.py defines how predictions are run on your model
 predict: "predict.py:Predictor"
