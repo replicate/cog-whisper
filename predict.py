@@ -29,22 +29,18 @@ class Predictor(BasePredictor):
     def setup(self):
         """Loads whisper models into memory to make running multiple predictions efficient"""
 
-        self.models = {}
-        for model in ["large-v2"]:
-            with open(f"./weights/{model}.pt", "rb") as fp:
-                checkpoint = torch.load(fp, map_location="cpu")
-                dims = ModelDimensions(**checkpoint["dims"])
-                self.models[model] = Whisper(dims)
-                self.models[model].load_state_dict(checkpoint["model_state_dict"])
-        
-        # preserving compatibility
-        self.models["large"] = self.models["large-v2"]
+        with open(f"./weights/large-v2.pt", "rb") as fp:
+            checkpoint = torch.load(fp, map_location="cpu")
+            dims = ModelDimensions(**checkpoint["dims"])
+            self.model = Whisper(dims)
+            self.model.load_state_dict(checkpoint["model_state_dict"])
+            self.model.to("cuda")
 
     def predict(
         self,
         audio: Path = Input(description="Audio file"),
         model: str = Input(
-            default="base",
+            default="large-v2",
             choices=["large", "large-v2"],
             description="Choose a Whisper model.",
         ),
@@ -98,13 +94,11 @@ class Predictor(BasePredictor):
         no_speech_threshold: float = Input(
             default=0.6,
             description="if the probability of the <|nospeech|> token is higher than this value AND the decoding has failed due to `logprob_threshold`, consider the segment as silence",
-        ),
-        profile: bool = Input(default=False)
+        )    
     ) -> ModelOutput:
         """Transcribes and optionally translates a single audio file"""
         print(f"Transcribe with {model} model")
-        model = self.models[model].to("cuda")
-
+        model = self.model
         if temperature_increment_on_fallback is not None:
             temperature = tuple(
                 np.arange(temperature, 1.0 + 1e-6, temperature_increment_on_fallback)
@@ -124,18 +118,8 @@ class Predictor(BasePredictor):
             "fp16": True,
             "verbose": False
         }
-        if profile:
-            pr = cProfile.Profile()
-            pr.enable()
         with torch.inference_mode():
             result = model.transcribe(str(audio), temperature=temperature, **args)
-        if profile:
-            # ... do something ...
-            pr.disable()
-            s = io.StringIO()
-            sortby = SortKey.CUMULATIVE
-            ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
-            ps.dump_stats(f"whisper_stats_{time.time()}")
 
         if transcription == "plain text":
             transcription = result["text"]
