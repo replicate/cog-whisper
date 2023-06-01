@@ -15,6 +15,10 @@ from whisper.model import Whisper, ModelDimensions
 from whisper.tokenizer import LANGUAGES, TO_LANGUAGE_CODE
 from whisper.utils import format_timestamp
 
+import torch.nn.init
+torch.nn.init.kaiming_uniform_ = lambda x, *args, **kwargs: x
+torch.nn.init.uniform_ = lambda x, *args, **kwargs: x
+
 
 class ModelOutput(BaseModel):
     detected_language: str
@@ -28,13 +32,13 @@ class ModelOutput(BaseModel):
 class Predictor(BasePredictor):
     def setup(self):
         """Loads whisper models into memory to make running multiple predictions efficient"""
-
         with open(f"./weights/large-v2.pt", "rb") as fp:
             checkpoint = torch.load(fp, map_location="cpu")
             dims = ModelDimensions(**checkpoint["dims"])
             self.model = Whisper(dims)
             self.model.load_state_dict(checkpoint["model_state_dict"])
             self.model.to("cuda")
+
 
     def predict(
         self,
