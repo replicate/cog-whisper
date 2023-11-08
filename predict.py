@@ -1,16 +1,8 @@
-import io
-import os
 from typing import Optional, Any
 import torch
 import numpy as np
-import cProfile
-import pstats
-from pstats import SortKey
-import time
 
 from cog import BasePredictor, Input, Path, BaseModel
-
-import whisper
 from whisper.model import Whisper, ModelDimensions
 from whisper.tokenizer import LANGUAGES, TO_LANGUAGE_CODE
 from whisper.utils import format_timestamp
@@ -28,8 +20,7 @@ class ModelOutput(BaseModel):
 class Predictor(BasePredictor):
     def setup(self):
         """Loads whisper models into memory to make running multiple predictions efficient"""
-
-        with open(f"./weights/large-v2.pt", "rb") as fp:
+        with open(f"./weights/large-v3.pt", "rb") as fp:
             checkpoint = torch.load(fp, map_location="cpu")
             dims = ModelDimensions(**checkpoint["dims"])
             self.model = Whisper(dims)
@@ -40,9 +31,9 @@ class Predictor(BasePredictor):
         self,
         audio: Path = Input(description="Audio file"),
         model: str = Input(
-            default="large-v2",
-            choices=["large", "large-v2"],
-            description="Choose a Whisper model.",
+            choices=["large-v3"],
+            default="large-v3",
+            description="This version only supports Whisper-large-v3.",
         ),
         transcription: str = Input(
             choices=["plain text", "srt", "vtt"],
@@ -94,11 +85,10 @@ class Predictor(BasePredictor):
         no_speech_threshold: float = Input(
             default=0.6,
             description="if the probability of the <|nospeech|> token is higher than this value AND the decoding has failed due to `logprob_threshold`, consider the segment as silence",
-        )    
+        ),
     ) -> ModelOutput:
         """Transcribes and optionally translates a single audio file"""
-        print(f"Transcribe with {model} model")
-        model = self.model
+        print(f"Transcribe with {model} model.")
         if temperature_increment_on_fallback is not None:
             temperature = tuple(
                 np.arange(temperature, 1.0 + 1e-6, temperature_increment_on_fallback)
@@ -116,10 +106,10 @@ class Predictor(BasePredictor):
             "logprob_threshold": logprob_threshold,
             "no_speech_threshold": no_speech_threshold,
             "fp16": True,
-            "verbose": False
+            "verbose": False,
         }
         with torch.inference_mode():
-            result = model.transcribe(str(audio), temperature=temperature, **args)
+            result = self.model.transcribe(str(audio), temperature=temperature, **args)
 
         if transcription == "plain text":
             transcription = result["text"]
@@ -129,7 +119,7 @@ class Predictor(BasePredictor):
             transcription = write_vtt(result["segments"])
 
         if translate:
-            translation = model.transcribe(
+            translation = self.model.transcribe(
                 str(audio), task="translate", temperature=temperature, **args
             )
 
