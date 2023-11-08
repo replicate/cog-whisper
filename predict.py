@@ -29,7 +29,7 @@ class Predictor(BasePredictor):
     def setup(self):
         """Loads whisper models into memory to make running multiple predictions efficient"""
 
-        with open(f"./weights/large-v2.pt", "rb") as fp:
+        with open(f"./weights/large-v3.pt", "rb") as fp:
             checkpoint = torch.load(fp, map_location="cpu")
             dims = ModelDimensions(**checkpoint["dims"])
             self.model = Whisper(dims)
@@ -40,8 +40,8 @@ class Predictor(BasePredictor):
         self,
         audio: Path = Input(description="Audio file"),
         model: str = Input(
-            default="large-v2",
-            choices=["large", "large-v2"],
+            default="large-v3",
+            choices=["large", "large-v3"],
             description="Choose a Whisper model.",
         ),
         transcription: str = Input(
