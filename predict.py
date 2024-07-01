@@ -75,10 +75,17 @@ class Predictor(BasePredictor):
     def predict(
         self,
         audio: Path = Input(description="Audio file"),
+        # Note: We only serve the large-v3 model to reduce switching costs and because it meets most users' needs.
+        # Other model sizes (base, small, tiny) are commented out as they're not currently offered.
         model: str = Input(
-            choices=["tiny", "base", "small", "large-v3"],
+            choices=[
+                "large-v3",
+                # "base",
+                # "small",
+                # "tiny",
+            ],
             default="large-v3",
-            description="Choose the Whisper model size.",
+            description="Whisper model size (currently only large-v3 is supported).",
         ),
         transcription: str = Input(
             choices=["plain text", "srt", "vtt"],
