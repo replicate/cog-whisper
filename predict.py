@@ -155,9 +155,12 @@ class Predictor(BasePredictor):
         else:
             temperature = [temperature]
 
-        language = None if language.lower() == "auto" else language
+        normalized_language = language.lower() if language.lower() != "auto" else None
+        if normalized_language and normalized_language not in LANGUAGES:
+            normalized_language = TO_LANGUAGE_CODE.get(normalized_language, normalized_language)
+
         args = {
-            "language": language,
+            "language": normalized_language,
             "patience": patience,
             "suppress_tokens": suppress_tokens,
             "initial_prompt": initial_prompt,
@@ -183,9 +186,12 @@ class Predictor(BasePredictor):
                 str(audio), task="translate", temperature=temperature, **args
             )
 
+        detected_language_code = result["language"]
+        detected_language_name = LANGUAGES.get(detected_language_code, detected_language_code)
+
         return ModelOutput(
             segments=result["segments"],
-            detected_language=LANGUAGES[result["language"]],
+            detected_language=detected_language_name,
             transcription=transcription,
             translation=translation["text"] if translate else None,
         )
@@ -209,3 +215,4 @@ def write_srt(transcript):
         result += f"{segment['text'].strip().replace('-->', '->')}\n"
         result += "\n"
     return result
+
