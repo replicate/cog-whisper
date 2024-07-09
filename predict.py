@@ -218,6 +218,7 @@ def get_audio_duration(file_path):
         print(f"Error reading audio file: {e.stderr}")
         return -1
     
+    
 def write_vtt(transcript):
     result = ""
     for segment in transcript:
