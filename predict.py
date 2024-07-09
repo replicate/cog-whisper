@@ -4,8 +4,9 @@ import time
 import subprocess
 import torch
 import numpy as np
+import ffmpeg
 
-from cog import BasePredictor, Input, Path, BaseModel
+from cog import BasePredictor, Input, Path, BaseModel, emit_metric
 from whisper.model import Whisper, ModelDimensions
 from whisper.tokenizer import LANGUAGES, TO_LANGUAGE_CODE
 from whisper.utils import format_timestamp
@@ -142,6 +143,9 @@ class Predictor(BasePredictor):
     ) -> ModelOutput:
         """Transcribes and optionally translates a single audio file"""
         print(f"Transcribe with {model} model.")
+        duration = get_audio_duration(audio)
+        print(f"Audio duration: {duration} sec")
+    
 
         if model != self.current_model:
             self.model = self.load_model(model)
@@ -189,6 +193,9 @@ class Predictor(BasePredictor):
         detected_language_code = result["language"]
         detected_language_name = LANGUAGES.get(detected_language_code, detected_language_code)
 
+        emit_metric("audio_duration", duration)
+        emit_metric("detected_language", detected_language_name)
+
         return ModelOutput(
             segments=result["segments"],
             detected_language=detected_language_name,
@@ -197,6 +204,21 @@ class Predictor(BasePredictor):
         )
 
 
+def get_audio_duration(file_path):
+    try:
+        probe = ffmpeg.probe(file_path)
+        audio_stream = next((stream for stream in probe['streams'] if stream['codec_type'] == 'audio'), None)
+        if audio_stream:
+            duration = float(audio_stream['duration'])
+            return np.round(duration).astype(int)
+        else:
+            print("No audio stream found, cannot calculate duration")
+            return -1
+    except ffmpeg.Error as e:
+        print(f"Error reading audio file: {e.stderr}")
+        return -1
+    
+    
 def write_vtt(transcript):
     result = ""
     for segment in transcript:
