@@ -194,7 +194,6 @@ class Predictor(BasePredictor):
         detected_language_name = LANGUAGES.get(detected_language_code, detected_language_code)
 
         emit_metric("audio_duration", duration)
-        emit_metric("detected_language", detected_language_name)
 
         return ModelOutput(
             segments=result["segments"],
