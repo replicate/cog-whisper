@@ -15,7 +15,7 @@ MODEL_CACHE = "weights"
 BASE_URL = f"https://weights.replicate.delivery/default/whisper-v3/{MODEL_CACHE}/"
 
 
-class ModelOutput(BaseModel):
+class Output(BaseModel):
     detected_language: str
     transcription: str
     segments: Any
@@ -140,7 +140,7 @@ class Predictor(BasePredictor):
             default=0.6,
             description="if the probability of the <|nospeech|> token is higher than this value AND the decoding has failed due to `logprob_threshold`, consider the segment as silence",
         ),
-    ) -> ModelOutput:
+    ) -> Output:
         """Transcribes and optionally translates a single audio file"""
         print(f"Transcribe with {model} model.")
         duration = get_audio_duration(audio)
@@ -195,7 +195,7 @@ class Predictor(BasePredictor):
 
         emit_metric("audio_duration", duration)
 
-        return ModelOutput(
+        return Output(
             segments=result["segments"],
             detected_language=detected_language_name,
             transcription=transcription,
@@ -209,7 +209,7 @@ def get_audio_duration(file_path):
         audio_stream = next((stream for stream in probe['streams'] if stream['codec_type'] == 'audio'), None)
         if audio_stream:
             duration = float(audio_stream['duration'])
-            return np.round(duration).astype(int)
+            return np.round(duration)
         else:
             print("No audio stream found, cannot calculate duration")
             return -1
