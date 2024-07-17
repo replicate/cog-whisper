@@ -1,0 +1,271 @@
+{
+  "detected_language": "english",
+  "segments": [
+    {
+      "avg_logprob": -0.2019126562424648,
+      "compression_ratio": 1.5272727272727273,
+      "end": 2.3000000000000003,
+      "id": 0,
+      "no_speech_prob": 0.35482147336006165,
+      "seek": 0,
+      "start": 0,
+      "temperature": 0,
+      "text": " I get up in the evening",
+      "tokens": [
+        50365,
+        286,
+        483,
+        493,
+        294,
+        264,
+        5634,
+        50480
+      ]
+    },
+    {
+      "avg_logprob": -0.2019126562424648,
+      "compression_ratio": 1.5272727272727273,
+      "end": 6.9,
+      "id": 1,
+      "no_speech_prob": 0.35482147336006165,
+      "seek": 0,
+      "start": 2.3000000000000003,
+      "temperature": 0,
+      "text": " And I ain't got nothing to say",
+      "tokens": [
+        50480,
+        400,
+        286,
+        7862,
+        380,
+        658,
+        1825,
+        281,
+        584,
+        50710
+      ]
+    },
+    {
+      "avg_logprob": -0.2019126562424648,
+      "compression_ratio": 1.5272727272727273,
+      "end": 8.74,
+      "id": 2,
+      "no_speech_prob": 0.35482147336006165,
+      "seek": 0,
+      "start": 6.9,
+      "temperature": 0,
+      "text": " I come home in the morning",
+      "tokens": [
+        50710,
+        286,
+        808,
+        1280,
+        294,
+        264,
+        2446,
+        50802
+      ]
+    },
+    {
+      "avg_logprob": -0.2019126562424648,
+      "compression_ratio": 1.5272727272727273,
+      "end": 13.46,
+      "id": 3,
+      "no_speech_prob": 0.35482147336006165,
+      "seek": 0,
+      "start": 8.74,
+      "temperature": 0,
+      "text": " I go to bed feeling the same way",
+      "tokens": [
+        50802,
+        286,
+        352,
+        281,
+        2901,
+        2633,
+        264,
+        912,
+        636,
+        51038
+      ]
+    },
+    {
+      "avg_logprob": -0.2019126562424648,
+      "compression_ratio": 1.5272727272727273,
+      "end": 15.22,
+      "id": 4,
+      "no_speech_prob": 0.35482147336006165,
+      "seek": 0,
+      "start": 13.46,
+      "temperature": 0,
+      "text": " I ain't nothing but tired",
+      "tokens": [
+        51038,
+        286,
+        7862,
+        380,
+        1825,
+        457,
+        5868,
+        51126
+      ]
+    },
+    {
+      "avg_logprob": -0.2019126562424648,
+      "compression_ratio": 1.5272727272727273,
+      "end": 20.1,
+      "id": 5,
+      "no_speech_prob": 0.35482147336006165,
+      "seek": 0,
+      "start": 15.22,
+      "temperature": 0,
+      "text": " Man, I'm just tired and bored with myself",
+      "tokens": [
+        51126,
+        2458,
+        11,
+        286,
+        478,
+        445,
+        5868,
+        293,
+        13521,
+        365,
+        2059,
+        51370
+      ]
+    },
+    {
+      "avg_logprob": -0.2019126562424648,
+      "compression_ratio": 1.5272727272727273,
+      "end": 21.7,
+      "id": 6,
+      "no_speech_prob": 0.35482147336006165,
+      "seek": 0,
+      "start": 20.1,
+      "temperature": 0,
+      "text": " Hey there, baby",
+      "tokens": [
+        51370,
+        1911,
+        456,
+        11,
+        3186,
+        51450
+      ]
+    },
+    {
+      "avg_logprob": -0.2019126562424648,
+      "compression_ratio": 1.5272727272727273,
+      "end": 26.22,
+      "id": 7,
+      "no_speech_prob": 0.35482147336006165,
+      "seek": 0,
+      "start": 21.7,
+      "temperature": 0,
+      "text": " I could use just a little help",
+      "tokens": [
+        51450,
+        286,
+        727,
+        764,
+        445,
+        257,
+        707,
+        854,
+        51676
+      ]
+    },
+    {
+      "avg_logprob": -0.2019126562424648,
+      "compression_ratio": 1.5272727272727273,
+      "end": 28.1,
+      "id": 8,
+      "no_speech_prob": 0.35482147336006165,
+      "seek": 0,
+      "start": 26.22,
+      "temperature": 0,
+      "text": " You can't start a fire",
+      "tokens": [
+        51676,
+        509,
+        393,
+        380,
+        722,
+        257,
+        2610,
+        51770
+      ]
+    },
+    {
+      "avg_logprob": -0.12943034172058104,
+      "compression_ratio": 1.127906976744186,
+      "end": 32.84,
+      "id": 9,
+      "no_speech_prob": 0.0018739013466984034,
+      "seek": 2810,
+      "start": 28.1,
+      "temperature": 0,
+      "text": " You can't start a fire without a spark",
+      "tokens": [
+        50365,
+        509,
+        393,
+        380,
+        722,
+        257,
+        2610,
+        1553,
+        257,
+        9908,
+        50602
+      ]
+    },
+    {
+      "avg_logprob": -0.12943034172058104,
+      "compression_ratio": 1.127906976744186,
+      "end": 34.6,
+      "id": 10,
+      "no_speech_prob": 0.0018739013466984034,
+      "seek": 2810,
+      "start": 32.84,
+      "temperature": 0,
+      "text": " This gun's for hire",
+      "tokens": [
+        50602,
+        639,
+        3874,
+        311,
+        337,
+        11158,
+        50690
+      ]
+    },
+    {
+      "avg_logprob": -0.12943034172058104,
+      "compression_ratio": 1.127906976744186,
+      "end": 40,
+      "id": 11,
+      "no_speech_prob": 0.0018739013466984034,
+      "seek": 2810,
+      "start": 34.6,
+      "temperature": 0,
+      "text": " Even if we're just dancing in the dark",
+      "tokens": [
+        50690,
+        2754,
+        498,
+        321,
+        434,
+        445,
+        8898,
+        294,
+        264,
+        2877,
+        50960
+      ]
+    }
+  ],
+  "transcription": " I get up in the evening And I ain't got nothing to say I come home in the morning I go to bed feeling the same way I ain't nothing but tired Man, I'm just tired and bored with myself Hey there, baby I could use just a little help You can't start a fire You can't start a fire without a spark This gun's for hire Even if we're just dancing in the dark",
+  "translation": null
+}

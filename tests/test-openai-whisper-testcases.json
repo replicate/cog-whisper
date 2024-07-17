@@ -1,0 +1,50 @@
+[
+    {
+        "audio": "https://replicate.delivery/mgxm/d9fa255c-4c47-4fec-99ce-f190539f10c4/olle.mp3",
+        "translate": true,
+        "expected_language": "swedish",
+        "name": "olle",
+        "expected_transcription": " Man har sett alla folkets hus, alla Gotemplagårdar som de får spela i, alla CUF-gårdar. Ja, naturligtvis alla restauranger runt omkring. Man säger 70- och 80-tal så var det ju väldigt mycket på torsdagskvällen när man spelade på Krogan. För då var det ju resande ute och dansade och det är ju slut med det idag.",
+        "expected_translation": " You've seen all the people's houses, all the temple gardens that they play in, all the CF-gards. And of course all the restaurants around. In the 70's and 80's there was a lot of Thursday nights when you played at the pubs, because then it was traveling and dancing. It's over with that today."
+    },
+    {
+        "audio": "https://replicate.delivery/mgxm/8d32eac0-0a30-47e8-819e-673a751f4b52/OSR_cn_000_0072_8k.wav",
+        "translate": true,
+        "expected_language": "chinese",
+        "name": "OSR_cn_000_0072_8k",
+        "expected_transcription": " 院子门口不远处就是一个地铁站这是一个美丽而神奇的景象树上长满了又大又甜的桃子海豚和鲸鱼的表演是很好看的节目邮局门前的人行道上有一个蓝色的邮箱",
+        "expected_translation": " Not far from the entrance of the yard is a subway station. This is a beautiful and magical scene. The trees are full of big and sweet peaches. The performance of dolphins and goldfish is a very good show. There is a blue oil box on the human-shaped road in front of the oil well."
+    },
+    {
+        "audio": "https://replicate.delivery/mgxm/716614fb-530c-4f66-b0f9-1b6c562716c4/Untitled.wav",
+        "translate": true,
+        "expected_language": "french",
+        "name": "Untitled",
+        "expected_transcription": " Le centre culturel a organisé une table ronde. Son univers est celui de sa famille. Le bateau lutte pour tenir face au vent. Aucune demande ne sera prise en compte après cette date. Roland et Olivier sont d'une merveilleuse bravoure. Connaissez-vous cette expression ? Sous-titrage Société Radio-Canada",
+        "expected_translation": " The cultural centre has organised a round table. Its universe is that of its family. The boat struggles to keep up with the wind. No request will be taken into account after this date. Roland and Olivier are wonderfully good. Do you know this expression? Yes."
+    },
+    {
+        "audio": "https://replicate.delivery/mgxm/ef2de00f-6286-42b6-b9c3-df02c2611cd3/nyn_konge02_1.mp3",
+        "translate": true,
+        "expected_language": "norwegian",
+        "name": "nyn_konge02_1",
+        "expected_transcription": " Figur 2 Unnskte å avvikle monarkiet. Det viste at det norske kongehuset i 1991 hadde en sterk posisjon gjennom norske skoleelever.",
+        "expected_translation": " Figure 2 Attitude to the monarchy. School election survey, 1991 What did Norwegian school students mean about the monarchy in 1991? Figure 2 shows that around 30% were happy that Norway had a royal house, and were personally aware of it. 65% thought it was okay with a royal house, without thinking it was particularly important, while only around 5% of those who asked wanted to dismantle the monarchy. This shows that the Norwegian royal house in 1991 had a strong position among Norwegian school students."
+    },
+    {
+        "audio": "https://replicate.delivery/mgxm/b844be48-57a6-4f65-b6a5-4a17711cb962/bruce.mp3",
+        "translate": false,
+        "expected_language": "english",
+        "name": "bruce",
+        "expected_transcription": " I get up in the evening And I ain't got nothing to say I come home in the morning I go to bed feeling the same way I ain't nothing but tired Man, I'm just tired and bored with myself Hey there, baby I could use just a little help You can't start a fire You can't start a fire without a spark This gun's for hire Even if we're just dancing in the dark",
+        "expected_translation": null
+    },
+    {
+        "audio": "https://replicate.delivery/mgxm/e5159b1b-508a-4be4-b892-e1eb47850bdc/OSR_uk_000_0050_8k.wav",
+        "translate": false,
+        "expected_language": "english",
+        "name": "OSR_uk_000_0050_8k",
+        "expected_transcription": " the little tales they tell are false the door was barred locked and bolted as well ripe pears are fit for a queen's table a big wet stain was on the round carpet the kite dipped and swayed but stayed aloft the pleasant hours fly by much too soon the room was crowded with a mild wab the room was crowded with a wild mob this strong arm shall shield your honour she blushed when he gave her a white orchid the beetle droned in the hot june sun thank you",
+        "expected_translation": null
+    }
+]
