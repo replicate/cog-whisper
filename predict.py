@@ -1,18 +1,53 @@
+# Prediction interface for Cog ⚙️
+# https://github.com/replicate/cog/blob/main/docs/python.md
+
+import subprocess
 from typing import Optional, Any
 import os
 import time
-import subprocess
 import torch
 import numpy as np
-import ffmpeg
+import whisperx
+from pydub import AudioSegment
 
-from cog import BasePredictor, Input, Path, BaseModel, emit_metric
-from whisper.model import Whisper, ModelDimensions
-from whisper.tokenizer import LANGUAGES, TO_LANGUAGE_CODE
-from whisper.utils import format_timestamp
+from whisperx.transcribe import LANGUAGES, TO_LANGUAGE_CODE
+from cog import BasePredictor, Input, Path, BaseModel
 
+# Constants
+DEVICE = "cuda"
+COMPUTE_TYPE = "float16"
 MODEL_CACHE = "weights"
-BASE_URL = f"https://weights.replicate.delivery/default/whisper-v3/{MODEL_CACHE}/"
+WHISPER_ARCH = f"./{MODEL_CACHE}/faster-whisper-large-v3"
+BASE_URL = (
+    f"https://weights.replicate.delivery/default/official-whisperx/{MODEL_CACHE}/"
+)
+DEFAULT_ASR_OPTIONS = {
+    "beam_size": 5,
+    "best_of": 5,
+    "patience": 1,
+    "length_penalty": 1,
+    "repetition_penalty": 1,
+    "no_repeat_ngram_size": 0,
+    "temperatures": [0.0, 0.2, 0.4, 0.6, 0.8, 1.0],
+    "compression_ratio_threshold": 2.4,
+    "log_prob_threshold": -1.0,
+    "no_speech_threshold": 0.6,
+    "condition_on_previous_text": False,
+    "prompt_reset_on_temperature": 0.5,
+    "initial_prompt": None,
+    "prefix": None,
+    "suppress_blank": True,
+    "suppress_tokens": [-1],
+    "without_timestamps": True,
+    "max_initial_timestamp": 0.0,
+    "word_timestamps": False,
+    "prepend_punctuations": "\"'“¿([{-",
+    "append_punctuations": "\"'.。,，!！?？:：”)]}、",
+    "suppress_numerals": False,
+    "max_new_tokens": None,
+    "clip_timestamps": None,
+    "hallucination_silence_threshold": None,
+}
 
 
 class Output(BaseModel):
@@ -42,48 +77,51 @@ def download_weights(url: str, dest: str) -> None:
     print("[+] Download completed in: ", time.time() - start, "seconds")
 
 
+def download_weights(url: str, dest: str) -> None:
+    start = time.time()
+    print("[!] Initiating download from URL: ", url)
+    print("[~] Destination path: ", dest)
+    if ".tar" in dest:
+        dest = os.path.dirname(dest)
+    command = ["pget", "-vf" + ("x" if ".tar" in url else ""), url, dest]
+    try:
+        print(f"[~] Running command: {' '.join(command)}")
+        subprocess.check_call(command, close_fds=False)
+    except subprocess.CalledProcessError as e:
+        print(
+            f"[ERROR] Failed to download weights. Command '{' '.join(e.cmd)}' returned non-zero exit status {e.returncode}."
+        )
+        raise
+    print("[+] Download completed in: ", time.time() - start, "seconds")
+
+
 class Predictor(BasePredictor):
     def setup(self):
-        """Load the large-v3 model"""
-        self.model_cache = MODEL_CACHE
-        self.models = {}
-        self.current_model = "large-v3"
-        self.load_model("large-v3")
+        """Load the model into memory to make running multiple predictions efficient"""
 
-    def load_model(self, model_name):
-        if model_name not in self.models:
-            if not os.path.exists(self.model_cache):
-                os.makedirs(self.model_cache)
-
-            model_file = f"{model_name}.pt"
+        if not os.path.exists(MODEL_CACHE):
+            os.makedirs(MODEL_CACHE)
+        model_files = [
+            "faster-whisper-large-v3.tar",
+            "vad.tar",
+        ]
+        for model_file in model_files:
             url = BASE_URL + model_file
-            dest_path = os.path.join(self.model_cache, model_file)
-
-            if not os.path.exists(dest_path):
+            filename = url.split("/")[-1]
+            dest_path = os.path.join(MODEL_CACHE, filename)
+            if not os.path.exists(dest_path.replace(".tar", "")):
                 download_weights(url, dest_path)
 
-            with open(dest_path, "rb") as fp:
-                checkpoint = torch.load(fp, map_location="cpu")
-                dims = ModelDimensions(**checkpoint["dims"])
-                model = Whisper(dims)
-                model.load_state_dict(checkpoint["model_state_dict"])
-                model.to("cuda")
-
-            self.models[model_name] = model
-        self.current_model = model_name
-        return self.models[model_name]
+        self.model = whisperx.load_model(
+            WHISPER_ARCH, DEVICE, compute_type=COMPUTE_TYPE
+        )
 
     def predict(
         self,
         audio: Path = Input(description="Audio file"),
-        # Note: We only serve the large-v3 model to reduce switching costs and because it meets most users' needs.
-        # Other model sizes (base, small, tiny) are commented out as they're not currently offered.
         model: str = Input(
             choices=[
                 "large-v3",
-                # "base",
-                # "small",
-                # "tiny",
             ],
             default="large-v3",
             description="Whisper model size (currently only large-v3 is supported).",
@@ -140,100 +178,133 @@ class Predictor(BasePredictor):
             default=0.6,
             description="if the probability of the <|nospeech|> token is higher than this value AND the decoding has failed due to `logprob_threshold`, consider the segment as silence",
         ),
+        batch_size: int = Input(
+            default=32,
+            description="Batch size for processing",
+        ),
     ) -> Output:
-        """Transcribes and optionally translates a single audio file"""
-        print(f"Transcribe with {model} model.")
-        duration = get_audio_duration(audio)
-        print(f"Audio duration: {duration} sec")
-    
+        """Transcribe and optionally translate an audio file"""
+        start_time = time.time()
 
-        if model != self.current_model:
-            self.model = self.load_model(model)
-        else:
-            self.model = self.models[self.current_model]
+        # Load audio
+        audio = whisperx.load_audio(audio)
 
+        # Handle temperature and temperature_increment_on_fallback
         if temperature_increment_on_fallback is not None:
-            temperature = tuple(
+            temperatures = tuple(
                 np.arange(temperature, 1.0 + 1e-6, temperature_increment_on_fallback)
             )
         else:
-            temperature = [temperature]
+            temperatures = [temperature]
 
-        normalized_language = language.lower() if language.lower() != "auto" else None
-        if normalized_language and normalized_language not in LANGUAGES:
-            normalized_language = TO_LANGUAGE_CODE.get(normalized_language, normalized_language)
+        # Update ASR options with user-provided values
+        asr_options = DEFAULT_ASR_OPTIONS.copy()
+        asr_options.update(
+            {
+                "temperatures": temperatures,
+                "compression_ratio_threshold": compression_ratio_threshold,
+                "log_prob_threshold": logprob_threshold,
+                "no_speech_threshold": no_speech_threshold,
+                "condition_on_previous_text": condition_on_previous_text,
+                "initial_prompt": initial_prompt,
+                "suppress_tokens": [int(t) for t in suppress_tokens.split(",") if t],
+            }
+        )
 
-        args = {
-            "language": normalized_language,
-            "patience": patience,
-            "suppress_tokens": suppress_tokens,
-            "initial_prompt": initial_prompt,
-            "condition_on_previous_text": condition_on_previous_text,
-            "compression_ratio_threshold": compression_ratio_threshold,
-            "logprob_threshold": logprob_threshold,
-            "no_speech_threshold": no_speech_threshold,
-            "fp16": True,
-            "verbose": False,
+        # Add patience only if it's not None
+        if patience is not None:
+            asr_options["patience"] = patience
+
+        # Update VAD options if needed
+        vad_options = {
+            "vad_onset": 0.5,
+            "vad_offset": 0.363,
         }
-        with torch.inference_mode():
-            result = self.model.transcribe(str(audio), temperature=temperature, **args)
 
+        # Reload the model with updated options
+        self.model = whisperx.asr.load_model(
+            WHISPER_ARCH,
+            device=DEVICE,
+            compute_type=COMPUTE_TYPE,
+            asr_options=asr_options,
+            vad_options=vad_options,
+            language=language if language != "auto" else None,
+        )
+
+        # Transcribe
+        result = self.model.transcribe(
+            audio,
+            batch_size=batch_size,
+            language=language if language != "auto" else None,
+        )
+
+        # Format transcription
         if transcription == "plain text":
-            transcription = result["text"]
+            transcription_text = " ".join(
+                [segment["text"] for segment in result["segments"]]
+            )
         elif transcription == "srt":
-            transcription = write_srt(result["segments"])
-        else:
-            transcription = write_vtt(result["segments"])
+            transcription_text = self.write_srt(result["segments"])
+        else:  # vtt
+            transcription_text = self.write_vtt(result["segments"])
 
+        # Translate if requested
+        translation = None
         if translate:
-            translation = self.model.transcribe(
-                str(audio), task="translate", temperature=temperature, **args
+            translation_result = self.model.transcribe(
+                audio,
+                task="translate",
+                batch_size=batch_size,
+                language=language if language != "auto" else None,
+            )
+            translation = " ".join(
+                [segment["text"] for segment in translation_result["segments"]]
             )
 
-        detected_language_code = result["language"]
-        detected_language_name = LANGUAGES.get(detected_language_code, detected_language_code)
-
-        emit_metric("audio_duration", duration)
+        print(f"Processing time: {time.time() - start_time:.2f} seconds")
 
         return Output(
+            detected_language=result["language"],
+            transcription=transcription_text,
             segments=result["segments"],
-            detected_language=detected_language_name,
-            transcription=transcription,
-            translation=translation["text"] if translate else None,
+            translation=translation if translate else None,
         )
+
+    @staticmethod
+    def write_vtt(transcript):
+        result = "WEBVTT\n\n"
+        for segment in transcript:
+            result += f"{format_timestamp(segment['start'])} --> {format_timestamp(segment['end'])}\n"
+            result += f"{segment['text'].strip().replace('-->', '->')}\n\n"
+        return result
+
+    @staticmethod
+    def write_srt(transcript):
+        result = ""
+        for i, segment in enumerate(transcript, start=1):
+            result += f"{i}\n"
+            result += f"{format_timestamp(segment['start'], always_include_hours=True, decimal_marker=',')} --> "
+            result += f"{format_timestamp(segment['end'], always_include_hours=True, decimal_marker=',')}\n"
+            result += f"{segment['text'].strip().replace('-->', '->')}\n\n"
+        return result
+
+
+def format_timestamp(
+    seconds: float, always_include_hours: bool = False, decimal_marker: str = "."
+):
+    assert seconds >= 0, "non-negative timestamp expected"
+    milliseconds = round(seconds * 1000.0)
+    hours = milliseconds // 3_600_000
+    milliseconds -= hours * 3_600_000
+    minutes = milliseconds // 60_000
+    milliseconds -= minutes * 60_000
+    seconds = milliseconds // 1_000
+    milliseconds -= seconds * 1_000
+    hours_marker = f"{hours:02d}:" if always_include_hours or hours > 0 else ""
+    return (
+        f"{hours_marker}{minutes:02d}:{seconds:02d}{decimal_marker}{milliseconds:03d}"
+    )
 
 
 def get_audio_duration(file_path):
-    try:
-        probe = ffmpeg.probe(file_path)
-        audio_stream = next((stream for stream in probe['streams'] if stream['codec_type'] == 'audio'), None)
-        if audio_stream:
-            duration = float(audio_stream['duration'])
-            return np.round(duration)
-        else:
-            print("No audio stream found, cannot calculate duration")
-            return -1
-    except ffmpeg.Error as e:
-        print(f"Error reading audio file: {e.stderr}")
-        return -1
-    
-    
-def write_vtt(transcript):
-    result = ""
-    for segment in transcript:
-        result += f"{format_timestamp(segment['start'])} --> {format_timestamp(segment['end'])}\n"
-        result += f"{segment['text'].strip().replace('-->', '->')}\n"
-        result += "\n"
-    return result
-
-
-def write_srt(transcript):
-    result = ""
-    for i, segment in enumerate(transcript, start=1):
-        result += f"{i}\n"
-        result += f"{format_timestamp(segment['start'], always_include_hours=True, decimal_marker=',')} --> "
-        result += f"{format_timestamp(segment['end'], always_include_hours=True, decimal_marker=',')}\n"
-        result += f"{segment['text'].strip().replace('-->', '->')}\n"
-        result += "\n"
-    return result
-
+    return len(AudioSegment.from_file(file_path)) / 1000.0
