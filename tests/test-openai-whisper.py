@@ -15,7 +15,8 @@ class TestOpenAIWhisperAPI(unittest.TestCase):
     def test_audio_transcriptions(self):
         test_cases = self.get_test_cases()
         for i, case in enumerate(test_cases):
-            self.run_test_case(i, case)
+            with self.subTest(case=case["name"]):
+                self.run_test_case(i, case)
 
     @staticmethod
     def get_test_cases() -> List[Dict]:
@@ -25,8 +26,7 @@ class TestOpenAIWhisperAPI(unittest.TestCase):
             return json.load(f)
 
     def run_test_case(self, index: int, case: Dict):
-        print(f"Processing test case {index+1}: {case['name']}...")
-
+        print(f"\nProcessing test case {index+1}: {case['name']}...")
         try:
             output = self.get_whisper_output(case)
             self.perform_assertions(case, output)
@@ -39,9 +39,11 @@ class TestOpenAIWhisperAPI(unittest.TestCase):
         file_path = os.path.join(self.output_dir, filename)
 
         if os.path.exists(file_path):
+            print(f"Reading cached output for {case['name']}...")
             with open(file_path, "r") as f:
                 return json.load(f)
         else:
+            print(f"Calling Whisper API for {case['name']}...")
             input_data = {
                 "audio": case["audio"],
                 "model": "large-v3",
@@ -68,18 +70,25 @@ class TestOpenAIWhisperAPI(unittest.TestCase):
         if case["translate"]:
             output_text = output.get("translation", "").strip()
             expected_text = case["expected_translation"].strip()
+            text_type = "translation"
         else:
             output_text = output.get("transcription", "").strip()
             expected_text = case["expected_transcription"].strip()
+            text_type = "transcription"
 
         if output_text.lower() != expected_text.lower():
             errors.append(
-                f"Text mismatch:\n"
+                f"{text_type.capitalize()} mismatch:\n"
                 f"Expected: '{expected_text}'\n"
                 f"Actual: '{output_text}'"
             )
 
         if errors:
+            print(f"Detected language: {output['detected_language']}")
+            print(f"Expected language: {case['expected_language']}")
+            print(f"Comparing {text_type}s:")
+            print(f"Output text: {output_text}")
+            print(f"Expected text: {expected_text}")
             raise AssertionError("\n".join(errors))
 
     def handle_error(self, index: int, case: Dict, error_msg: str):

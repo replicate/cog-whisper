@@ -1,0 +1,14 @@
+{
+  "detected_language": "fr",
+  "segments": [
+    {
+      "end": 28.729,
+      "start": 0.111,
+      "text": " Le centre culturel a organis\u00e9 une table ronde. Son univers est celui de sa famille. Le bateau lutte pour tenir face au vent. Aucune demande ne sera prise en compte apr\u00e8s cette date. Roland et Olivier sont d'une merveilleuse bravoure. Connaissez-vous cette expression ?"
+    }
+  ],
+  "srt_file": null,
+  "transcription": " Le centre culturel a organis\u00e9 une table ronde. Son univers est celui de sa famille. Le bateau lutte pour tenir face au vent. Aucune demande ne sera prise en compte apr\u00e8s cette date. Roland et Olivier sont d'une merveilleuse bravoure. Connaissez-vous cette expression ?",
+  "translation": " The cultural center has organized a round table. Its universe is that of its family. The boat struggles to keep up with the wind. No request will be taken into account after this date. Roland and Olivier are wonderfully good. Do you know this expression?",
+  "txt_file": null
+}
