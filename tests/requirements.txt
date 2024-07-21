@@ -1,0 +1,4 @@
+jiwer
+fuzzywuzzy
+replicate
+python-Levenshtein
