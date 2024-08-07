@@ -207,7 +207,7 @@ def get_audio_duration(file_path):
     try:
         probe = ffmpeg.probe(file_path)
         audio_stream = next((stream for stream in probe['streams'] if stream['codec_type'] == 'audio'), None)
-        if audio_stream:
+        if audio_stream and 'duration' in audio_stream:
             duration = float(audio_stream['duration'])
             return np.round(duration)
         else:
