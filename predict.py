@@ -5,7 +5,6 @@ import subprocess
 from typing import Optional, Any
 import os
 import time
-import torch
 import numpy as np
 import whisperx
 from pydub import AudioSegment
@@ -57,24 +56,7 @@ class Output(BaseModel):
     translation: Optional[str]
     txt_file: Optional[Path]
     srt_file: Optional[Path]
-
-
-def download_weights(url: str, dest: str) -> None:
-    start = time.time()
-    print("[!] Initiating download from URL: ", url)
-    print("[~] Destination path: ", dest)
-    if ".tar" in dest:
-        dest = os.path.dirname(dest)
-    command = ["pget", "-vf" + ("x" if ".tar" in url else ""), url, dest]
-    try:
-        print(f"[~] Running command: {' '.join(command)}")
-        subprocess.check_call(command, close_fds=False)
-    except subprocess.CalledProcessError as e:
-        print(
-            f"[ERROR] Failed to download weights. Command '{' '.join(e.cmd)}' returned non-zero exit status {e.returncode}."
-        )
-        raise
-    print("[+] Download completed in: ", time.time() - start, "seconds")
+    processing_time: float
 
 
 def download_weights(url: str, dest: str) -> None:
@@ -221,6 +203,10 @@ class Predictor(BasePredictor):
             "vad_offset": 0.363,
         }
 
+        # Update language handling
+        if language.lower() != "auto":
+            language = self._normalize_language(language)
+
         # Reload the model with updated options
         self.model = whisperx.asr.load_model(
             WHISPER_ARCH,
@@ -261,14 +247,30 @@ class Predictor(BasePredictor):
                 [segment["text"] for segment in translation_result["segments"]]
             )
 
-        print(f"Processing time: {time.time() - start_time:.2f} seconds")
+        end_time = time.time()
+        processing_time = end_time - start_time
+        print(f"Internal processing time: {processing_time:.2f} seconds")
 
         return Output(
             detected_language=result["language"],
             transcription=transcription_text,
             segments=result["segments"],
             translation=translation if translate else None,
+            processing_time=processing_time,  # Add this line
         )
+
+    def _normalize_language(self, language: str) -> str:
+        """Normalize language input to ISO 639-1 code."""
+        language = language.lower()
+        if language in LANGUAGES:
+            return language
+        for code, name in LANGUAGES.items():
+            if language == name.lower():
+                return code
+        for full_name, code in TO_LANGUAGE_CODE.items():
+            if language == full_name.lower():
+                return code
+        raise ValueError(f"Unsupported language: {language}")
 
     @staticmethod
     def write_vtt(transcript):
