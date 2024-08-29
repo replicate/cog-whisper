@@ -2,3 +2,8 @@ jiwer
 fuzzywuzzy
 replicate
 python-Levenshtein
+
+pandas
+matplotlib
+seaborn
+pydub
