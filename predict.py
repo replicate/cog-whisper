@@ -76,18 +76,6 @@ class Predictor(BasePredictor):
     def predict(
         self,
         audio: Path = Input(description="Audio file"),
-        # Note: We only serve the large-v3 model to reduce switching costs and because it meets most users' needs.
-        # Other model sizes (base, small, tiny) are commented out as they're not currently offered.
-        model: str = Input(
-            choices=[
-                "large-v3",
-                # "base",
-                # "small",
-                # "tiny",
-            ],
-            default="large-v3",
-            description="Whisper model size (currently only large-v3 is supported).",
-        ),
         transcription: str = Input(
             choices=["plain text", "srt", "vtt"],
             default="plain text",
@@ -142,11 +130,14 @@ class Predictor(BasePredictor):
         ),
     ) -> Output:
         """Transcribes and optionally translates a single audio file"""
+        # Note: We only serve the large-v3 model to reduce switching costs and because it meets most users' needs.
+        # Other model sizes are not currently offered. The `model` variable used to be an input argument.
+        model = "large-v3"
+
         print(f"Transcribe with {model} model.")
         duration = get_audio_duration(audio)
         print(f"Audio duration: {duration} sec")
     
-
         if model != self.current_model:
             self.model = self.load_model(model)
         else:
